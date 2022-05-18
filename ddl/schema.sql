@@ -1,0 +1,174 @@
+-- MySQL Workbench Synchronization
+-- Generated: 2022-05-17 22:29
+-- Model: New Model
+-- Version: 1.0
+-- Project: Name of the project
+-- Author: jarismar
+
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+CREATE SCHEMA IF NOT EXISTS `b3c` DEFAULT CHARACTER SET utf8 ;
+
+CREATE TABLE IF NOT EXISTS `b3c`.`broker_invoice` (
+  `biv_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `usr_id` INT(10) UNSIGNED NOT NULL,
+  `biv_filename` VARCHAR(30) NOT NULL,
+  `biv_number` INT(10) UNSIGNED NOT NULL,
+  `biv_page` TINYINT(3) UNSIGNED NOT NULL,
+  `biv_market_date` DATE NOT NULL,
+  `biv_bank_date` DATE NOT NULL,
+  `biv_raw_value` DECIMAL(10,2) NOT NULL,
+  `biv_net_value` DECIMAL(10,2) NOT NULL,
+  PRIMARY KEY (`biv_id`),
+  INDEX `IXFK_BIV_USR` (`usr_id` ASC) VISIBLE,
+  INDEX `IX_BIV_BANK_DATE` (`biv_bank_date` ASC) INVISIBLE,
+  INDEX `IX_BIV_MARKET_DATE` (`biv_market_date` ASC) VISIBLE,
+  UNIQUE INDEX `IU_BIV_FILENAME` (`biv_filename` ASC) VISIBLE,
+  CONSTRAINT `FK_BIV_USR1`
+    FOREIGN KEY (`usr_id`)
+    REFERENCES `b3c`.`user` (`usr_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+CREATE TABLE IF NOT EXISTS `b3c`.`user` (
+  `usr_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `usr_uuid` CHAR(36) NOT NULL,
+  `usr_name` VARCHAR(100) NOT NULL,
+  PRIMARY KEY (`usr_id`),
+  UNIQUE INDEX `UI_USR_UUID` (`usr_uuid` ASC) VISIBLE,
+  UNIQUE INDEX `UI_USR_NAME` (`usr_name` ASC) VISIBLE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+CREATE TABLE IF NOT EXISTS `b3c`.`broker_invoice_item` (
+  `bii_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `cmp_id` INT(10) UNSIGNED NOT NULL,
+  `biv_id` INT(10) UNSIGNED NOT NULL,
+  `bii_qty` INT(10) UNSIGNED NOT NULL,
+  `bii_price` DECIMAL(10,2) NOT NULL,
+  `bii_cd_bit` CHAR(1) NOT NULL COMMENT '(C)redit or (D)ebit bit',
+  PRIMARY KEY (`bii_id`),
+  INDEX `IXFK_BII_CMP` (`cmp_id` ASC) VISIBLE,
+  INDEX `IXFK_BII_BIV` (`biv_id` ASC) VISIBLE,
+  CONSTRAINT `FK_BII_CMP`
+    FOREIGN KEY (`cmp_id`)
+    REFERENCES `b3c`.`company` (`cmp_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `FK_BII_BIV`
+    FOREIGN KEY (`biv_id`)
+    REFERENCES `b3c`.`broker_invoice` (`biv_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+CREATE TABLE IF NOT EXISTS `b3c`.`company` (
+  `cmp_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `cmp_code` VARCHAR(10) NOT NULL,
+  `cmp_name` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`cmp_id`),
+  UNIQUE INDEX `IU_CMP_CODE` (`cmp_code` ASC) VISIBLE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+CREATE TABLE IF NOT EXISTS `b3c`.`broker_invoice_tax` (
+  `bit_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `biv_id` INT(10) UNSIGNED NOT NULL,
+  `tax_id` INT(10) UNSIGNED NOT NULL,
+  `bit_value` DECIMAL(10,2) NOT NULL,
+  PRIMARY KEY (`bit_id`),
+  INDEX `IXFK_BIT_BIV` (`biv_id` ASC) VISIBLE,
+  INDEX `IXFK_BIT_TAX` (`tax_id` ASC) VISIBLE,
+  CONSTRAINT `FK_BIT_BIV`
+    FOREIGN KEY (`biv_id`)
+    REFERENCES `b3c`.`broker_invoice` (`biv_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `FK_BIT_TAX`
+    FOREIGN KEY (`tax_id`)
+    REFERENCES `b3c`.`tax` (`tax_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+CREATE TABLE IF NOT EXISTS `b3c`.`tax` (
+  `tax_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `tax_code` VARCHAR(10) NOT NULL,
+  `tax_source` VARCHAR(10) NOT NULL,
+  PRIMARY KEY (`tax_id`),
+  UNIQUE INDEX `IU_TAX_CODE` (`tax_code` ASC) VISIBLE,
+  INDEX `IX_TAX_SOURCE` (`tax_source` ASC) VISIBLE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+CREATE TABLE IF NOT EXISTS `b3c`.`earning` (
+  `ear_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `cmp_id` INT(10) UNSIGNED NOT NULL,
+  `usr_id` INT(10) UNSIGNED NOT NULL,
+  `ear_paydate` DATE NOT NULL,
+  `ear_net_value` DECIMAL(10,2) NOT NULL,
+  `ear_tax` DECIMAL(10,2) NULL DEFAULT NULL,
+  PRIMARY KEY (`ear_id`),
+  INDEX `IXFK_EAR_CMP` (`cmp_id` ASC) VISIBLE,
+  INDEX `IXFK_EAR_USR` (`usr_id` ASC) VISIBLE,
+  INDEX `IX_EAR_PAYDATE` (`ear_paydate` ASC) VISIBLE,
+  CONSTRAINT `FK_EAR_CMP`
+    FOREIGN KEY (`cmp_id`)
+    REFERENCES `b3c`.`company` (`cmp_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `FK_EAR_USR`
+    FOREIGN KEY (`usr_id`)
+    REFERENCES `b3c`.`user` (`usr_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+CREATE TABLE IF NOT EXISTS `b3c`.`position` (
+  `pos_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `bii_id_in` INT(10) UNSIGNED NOT NULL,
+  `pos_balance` INT(10) UNSIGNED NOT NULL,
+  PRIMARY KEY (`pos_id`),
+  INDEX `IXFK_POS_BII_IN` (`bii_id_in` ASC) VISIBLE,
+  CONSTRAINT `fk_Position_BrokerInvoiceItem1`
+    FOREIGN KEY (`bii_id_in`)
+    REFERENCES `b3c`.`broker_invoice_item` (`bii_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+CREATE TABLE IF NOT EXISTS `b3c`.`sale` (
+  `sal_id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `bii_id_out` INT(10) UNSIGNED NOT NULL,
+  `bii_id_in` INT(10) UNSIGNED NOT NULL,
+  `sal_qty` INT(10) UNSIGNED NOT NULL,
+  `sal_date` DATE NOT NULL,
+  PRIMARY KEY (`sal_id`),
+  INDEX `IXFK_SAL_BII_OUT` (`bii_id_out` ASC) VISIBLE,
+  INDEX `IXFK_SAL_BII_IN` (`bii_id_in` ASC) VISIBLE,
+  INDEX `IX_SAL_DATE` (`sal_date` ASC) VISIBLE,
+  CONSTRAINT `fk_Sale_BrokerInvoiceItem1`
+    FOREIGN KEY (`bii_id_out`)
+    REFERENCES `b3c`.`broker_invoice_item` (`bii_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Sale_BrokerInvoiceItem2`
+    FOREIGN KEY (`bii_id_in`)
+    REFERENCES `b3c`.`broker_invoice_item` (`bii_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
