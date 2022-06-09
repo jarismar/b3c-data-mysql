@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS `b3c`.`broker_invoice` (
   `biv_net_value` DECIMAL(10,2) NOT NULL,
   PRIMARY KEY (`biv_id`),
   INDEX `IXFK_BIV_USR` (`usr_id` ASC) VISIBLE,
-  INDEX `IX_BIV_BANK_DATE` (`biv_billing_date` ASC) INVISIBLE,
+  INDEX `IX_BIV_BANK_DATE` (`biv_billing_date` ASC) VISIBLE,
   INDEX `IX_BIV_MARKET_DATE` (`biv_market_date` ASC) VISIBLE,
   UNIQUE INDEX `IU_BIV_FILENAME` (`biv_filename` ASC) VISIBLE,
   CONSTRAINT `FK_BIV_USR1`
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS `b3c`.`broker_invoice_item` (
   `bii_qty` INT UNSIGNED NOT NULL,
   `bii_qty_balance` INT UNSIGNED NOT NULL,
   `bii_price` DECIMAL(10,2) UNSIGNED NOT NULL,
-  `bii_debit` BIT(1) NOT NULL COMMENT '(C)redit or (D)ebit bit',
+  `bii_debit` BIT(1) NOT NULL,
   PRIMARY KEY (`bii_id`),
   INDEX `IXFK_BII_CMP` (`cmp_id` ASC) VISIBLE,
   INDEX `IXFK_BII_BIV` (`biv_id` ASC) VISIBLE,
